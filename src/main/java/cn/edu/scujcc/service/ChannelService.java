@@ -1,6 +1,6 @@
 package cn.edu.scujcc.service;
 
-import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import cn.edu.scujcc.dao.ChannelRepository;
 import cn.edu.scujcc.model.Channel;
+import cn.edu.scujcc.model.Comment;
 
 @Service
 public class ChannelService {
@@ -26,9 +27,6 @@ public class ChannelService {
 	 * @return 频道List
 	 */
 	public List<Channel> getAllChannels() {
-//		Page<Channel> page = repo.findByTitleContaining("中央", PageRequest.of(1, 10));
-//		return page.toList();
-//		
 		return repo.findAll();
 	}
 
@@ -89,32 +87,84 @@ public class ChannelService {
 			saved.setUrl(c.getUrl());
 		}
 		if (c.getComments() != null) {
-			if (saved.getComments() != null) {//把新评论追加到老评论后面。
+			if (saved.getComments() != null) {// 把新评论追加到老评论后面。
 				saved.getComments().addAll(c.getComments());
-			} else {//用新评论代替老的空评论
+			} else {// 用新评论代替老的空评论
 				saved.setComments(c.getComments());
 			}
 		}
 		if (c.getCover() != null) {
 			saved.setCover(c.getCover());
 		}
-		return repo.save(saved);  //保存更新后的实体对象
+		return repo.save(saved); // 保存更新后的实体对象
 	}
 
 	public List<Channel> searchByQuality(String quality) {
 		return repo.findByQuality(quality);
 	}
-	
+
 	/**
 	 * 获取冷门频道。
+	 * 
 	 * @return
 	 */
 	public List<Channel> findColdChannels() {
 		return repo.findByCommentsNull();
 	}
-	
+
 	public List<Channel> findChannelsPage(int page) {
 		Page<Channel> p = repo.findAll(PageRequest.of(page, 3));
 		return p.toList();
+	}
+
+	/**
+	 * 向指定频道添加一条评论。
+	 * 
+	 * @param channelId 目标频道的编号
+	 * @param comment   即将添加的评论
+	 */
+	public Channel addComment(String channelId, Comment comment) {
+		Channel result = null;
+		Channel saved = getChannel(channelId);
+		if (null != saved) { // 数据库中有该频道
+			saved.addComment(comment);
+			result = repo.save(saved);
+		}
+		return result;
+	}
+
+	/**
+	 * 获取目标频道的热门评论。
+	 * 
+	 * @param channelId 目标频道的编号
+	 * @return 评论列表
+	 */
+	public List<Comment> hotComments(String channelId) {
+		List<Comment> result = null;
+		Channel saved = getChannel(channelId);
+		if (saved != null) {
+			result = saved.getComments();
+			result.sort(new Comparator<Comment>() {
+				@Override
+				public int compare(Comment o1, Comment o2) {
+					// 若o1比o2小，则返回负数；若o1比o2大，则返回正数；若o1等于o2，则返回0
+					int re = 0;
+					if (o1.getStar() < o2.getStar()) {
+						re = 1;
+					} else if (o1.getStar() > o2.getStar()) {
+						re = -1;
+					}
+					return re;
+				}
+			});
+			if (result.size() > 3) {
+				result = result.subList(0, 3);
+			}
+			logger.debug("热门评论有" + result.size() + "条...");
+			logger.debug(result.toString());
+		} else {
+			logger.warn("指定的频道不存在，id="+channelId);
+		}
+		return result;
 	}
 }
