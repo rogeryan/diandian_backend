@@ -19,7 +19,7 @@ import cn.edu.scujcc.model.Comment;
 public class ChannelService {
 	@Autowired
 	private ChannelRepository repo;
-	public static final Logger logger = LoggerFactory.getLogger(ChannelService.class);
+	private static final Logger logger = LoggerFactory.getLogger(ChannelService.class);
 
 	/**
 	 * 获取所有频道的数据
