@@ -5,6 +5,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +29,9 @@ public class ChannelController {
 	@Autowired
 	private ChannelService service;
 	
+	@Autowired
+	private CacheManager cacheManager;
+	
 	@GetMapping
 	public List<Channel> getAllChannels() {
 		logger.info("正在读取所有频道信息!!!");
@@ -35,16 +40,29 @@ public class ChannelController {
 		return results;
 	}
 	
+	/**
+	 * 读取频道前必须先登录
+	 * @param id
+	 * @return
+	 */
 	@GetMapping("/{id}")
 	public Channel getChannel(@PathVariable String id) {
 		logger.info("正在读取频道："+id);
-		Channel c = service.getChannel(id);
-		if (c != null) {
-			return c;
-		} else {
-			logger.error("找不到指定的频道。");
+		//检查登录的标志是否存在
+		Cache cache = cacheManager.getCache("users");
+		Object token = cache.get("token");
+		if (token != null) {
+			logger.debug("当前已登录用户是：" + token);
+			Channel c = service.getChannel(id);
+			if (c != null) {
+				return c;
+			} else {
+				logger.error("找不到指定的频道。");
+				return null;
+			}
+		} else { //未登录，拒绝访问
 			return null;
-		}
+		}		
 	}
 	
 	@DeleteMapping("/{id}")

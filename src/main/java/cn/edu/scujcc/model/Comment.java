@@ -1,5 +1,6 @@
 package cn.edu.scujcc.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -9,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
  * @author Roger Yan
  *
  */
-public class Comment {
+public class Comment implements Serializable{
+
+	private static final long serialVersionUID = 9025921434272724054L;
 	/**
 	 * 评论作者
 	 */

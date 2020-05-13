@@ -1,5 +1,6 @@
 package cn.edu.scujcc.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import org.springframework.data.annotation.Id;
@@ -9,7 +10,8 @@ import org.springframework.data.annotation.Id;
  * @author Roger Yan
  *
  */
-public class User {
+public class User implements Serializable {
+	private static final long serialVersionUID = 8425746230705180748L;
 	@Id
 	private String id;
 	private String username;

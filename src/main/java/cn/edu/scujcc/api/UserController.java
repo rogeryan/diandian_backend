@@ -3,6 +3,8 @@ package cn.edu.scujcc.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,9 @@ public class UserController {
 	private final static Logger logger = LoggerFactory.getLogger(UserController.class);
 	@Autowired
 	private UserService service;
+	
+	@Autowired
+	private CacheManager cacheManager;
 	
 	@PostMapping("/register")
 	public Response register(@RequestBody User u) {
@@ -45,6 +50,9 @@ public class UserController {
 		if (saved != null) { //登录成功
 			result.setStatus(Response.STATUS_OK);
 			result.setData(saved);
+			//写登录成功的标志
+			Cache cache = cacheManager.getCache("users");
+			cache.put("token", username);
 		} else {//登录失败
 			logger.error("用户已存在，不能注册。");
 			result.setStatus(Response.STATUS_ERROR);
