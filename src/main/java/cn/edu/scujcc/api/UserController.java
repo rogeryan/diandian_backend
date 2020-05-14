@@ -3,6 +3,8 @@ package cn.edu.scujcc.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,9 @@ import cn.edu.scujcc.service.UserService;
 @RequestMapping("/user")
 public class UserController {
 	private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+	
+	@Autowired
+	private CacheManager cacheManager;
 	
 	@Autowired
 	private UserService service;
@@ -35,8 +40,11 @@ public class UserController {
 		//FIXME 删除此句日志
 		logger.debug("用户:"+username+" 准备登录，密码是："+password);
 		boolean status = service.checkUser(username, password);
-		if (status) {
+		if (status) { //登录成功
 			result = 1;
+			//把用户存入缓存
+			Cache cache = cacheManager.getCache(User.CACHE_NAME);
+			cache.put("current_user", username);
 		}
 		return result;
 	}

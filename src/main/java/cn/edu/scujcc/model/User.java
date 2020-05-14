@@ -11,6 +11,7 @@ import org.springframework.data.annotation.Id;
  *
  */
 public class User {
+	public static final String CACHE_NAME = "users";
 	@Id
 	private String id;
 	private String username;
@@ -20,6 +21,7 @@ public class User {
 	private LocalDate birthday;
 	private LocalDateTime lastLogin;
 	private String lastIp;
+	
 	
 	@Override
 	public int hashCode() {
