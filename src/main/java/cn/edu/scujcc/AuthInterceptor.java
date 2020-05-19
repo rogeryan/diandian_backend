@@ -28,28 +28,30 @@ public class AuthInterceptor implements HandlerInterceptor {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
-		boolean logged = false;
 		String uri = request.getRequestURI();
-		if (uri.startsWith("/user/login")) {
+		if (uri.startsWith("/user/login")) {  //登录程序本身免去身份检查
 			return true;
-		} else {		
-			// 从header中读取token，用于判断用户是否登录
-			//TODO 精简下面这段代码
-			String token = request.getHeader("token");
-			if (null == token) { // 未登录
-				logged = false;
-			} else {
-				String username = userService.currentUser(token);
-				if (null == username) { // token无效
-					logged = false;
-				} else {
-					logged = true;
-				}
-			}
-	
-			logger.debug("当前用户是否登录？" + (logged ? "通过" : "不通过"));
-			return logged;
 		}
+		if (response.getStatus() == HttpServletResponse.SC_FORBIDDEN) { //403出错也免去身份检查
+			return true;
+		}
+		logger.debug("response status:" +response.getStatus());
+		
+		boolean logged = false;		
+		// 从header中读取token，用于判断用户是否登录
+		String token = request.getHeader("token");
+		if (null != token) { // 未登录
+			String username = userService.currentUser(token);
+			if (null != username) {
+				logged = true;
+			}
+		}	
+		logger.debug("当前用户是否登录？" + (logged ? "是" : "不是"));
+		if (!logged) {
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "未登录，禁止访问！");
+		}
+		return logged;
+		
 	}
 
 	@Override

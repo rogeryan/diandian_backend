@@ -55,19 +55,15 @@ public class ChannelController {
 	public Channel getChannel(@PathVariable String id, @RequestHeader("token") String token) {
 		logger.info("正在读取频道："+id);
 		String user = userService.currentUser(token);
-		logger.info("当前用户是："+ user);
-		if (user != null) {
-			logger.debug("当前已登录用户是：" + token);
-			Channel c = service.getChannel(id);
-			if (c != null) {
-				return c;
-			} else {
-				logger.error("找不到指定的频道。");
-				return null;
-			}
-		} else { //未登录，拒绝访问
+		logger.debug("当前已登录用户是：" + user);
+		Channel c = service.getChannel(id);
+		if (c != null) {
+			return c;
+		} else {
+			logger.error("找不到指定的频道。");
 			return null;
-		}		
+		}
+				
 	}
 	
 	@DeleteMapping("/{id}")
@@ -111,9 +107,11 @@ public class ChannelController {
 	}
 	
 	@PostMapping("/{channelId}/comment")
-	public Channel addComment(@PathVariable String channelId, @RequestBody Comment comment) {
+	public Channel addComment(@RequestHeader("token") String token, @PathVariable String channelId, @RequestBody Comment comment) {
 		Channel result = null;
-		logger.debug("即将评论频道："+channelId+"，评论对象："+comment);
+		String username = userService.currentUser(token);
+		comment.setAuthor(username);
+		logger.debug(username + "即将评论频道："+channelId+"，评论对象："+comment);
 		//把评论保存到数据库
 		result = service.addComment(channelId, comment);
 		return result;
