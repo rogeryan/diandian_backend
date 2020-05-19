@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cn.edu.scujcc.UserExistException;
+import cn.edu.scujcc.model.Result;
 import cn.edu.scujcc.model.User;
 import cn.edu.scujcc.service.UserService;
 
@@ -27,24 +29,38 @@ public class UserController {
 	private UserService service;
 	
 	@PostMapping("/register")
-	public User register(@RequestBody User u) {
+	public Result register(@RequestBody User u) {
+		Result result = new Result();
 		logger.debug("即将注册用户，用户数据："+u);
-		User saved = service.createUser(u);
-		return saved;
+		User saved = null;
+		try {
+			saved = service.createUser(u);
+			result.setStatus(Result.OK);
+			result.setMessage("注册成功");
+			result.setData(saved);
+		} catch (UserExistException e) {
+			logger.error("用户名已存在。", e);
+			result.setStatus(Result.ERROR);
+			result.setMessage("用户名已存在。");
+		}
+		
+		return result;
 	}
 	
 	@GetMapping("/login/{username}/{password}")
-	public int login(@PathVariable String username,
+	public Result login(@PathVariable String username,
 			@PathVariable String password) {
-		int result = 0;
-		//FIXME 删除此句日志
-		logger.debug("用户:"+username+" 准备登录，密码是："+password);
+		Result result = new Result();
 		boolean status = service.checkUser(username, password);
 		if (status) { //登录成功
-			result = 1;
+			result.setStatus(Result.OK);
+			result.setMessage("登录成功");
 			//把用户存入缓存
 			Cache cache = cacheManager.getCache(User.CACHE_NAME);
 			cache.put("current_user", username);
+		} else {
+			result.setStatus(Result.ERROR);
+			result.setMessage("登录失败");
 		}
 		return result;
 	}
