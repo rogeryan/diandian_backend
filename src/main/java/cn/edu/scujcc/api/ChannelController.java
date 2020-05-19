@@ -14,12 +14,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cn.edu.scujcc.model.Channel;
 import cn.edu.scujcc.model.Comment;
 import cn.edu.scujcc.service.ChannelService;
+import cn.edu.scujcc.service.UserService;
 
 @RestController
 @RequestMapping("/channel")
@@ -28,13 +30,17 @@ public class ChannelController {
 	
 	@Autowired
 	private ChannelService service;
+	@Autowired
+	private UserService userService;
 	
 	@Autowired
 	private CacheManager cacheManager;
 	
 	@GetMapping
-	public List<Channel> getAllChannels() {
-		logger.info("正在读取所有频道信息!!!");
+	public List<Channel> getAllChannels(@RequestHeader("token") String token) {
+		logger.info("正在读取所有频道信息, token="+token);
+		String user = userService.currentUser(token);
+		logger.info("当前用户是："+ user);
 		List<Channel> results = service.getAllChannels();
 				
 		return results;
@@ -46,12 +52,11 @@ public class ChannelController {
 	 * @return
 	 */
 	@GetMapping("/{id}")
-	public Channel getChannel(@PathVariable String id) {
+	public Channel getChannel(@PathVariable String id, @RequestHeader("token") String token) {
 		logger.info("正在读取频道："+id);
-		//检查登录的标志是否存在
-		Cache cache = cacheManager.getCache("users");
-		Object token = cache.get("token");
-		if (token != null) {
+		String user = userService.currentUser(token);
+		logger.info("当前用户是："+ user);
+		if (user != null) {
 			logger.debug("当前已登录用户是：" + token);
 			Channel c = service.getChannel(id);
 			if (c != null) {

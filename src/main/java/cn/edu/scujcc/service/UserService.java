@@ -61,4 +61,14 @@ public @Service class UserService {
 
 		return uid;
 	}
+	
+	/**
+	 * 通过唯一编号查询用户名
+	 * @param token
+	 * @return 用户名；如果没有找到，则返回null
+	 */
+	public String currentUser(String token) {
+		Cache cache = cacheManager.getCache(User.CACHE_NAME);
+		return cache.get(token, String.class);
+	}
 }
