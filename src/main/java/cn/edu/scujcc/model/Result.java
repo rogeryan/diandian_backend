@@ -1,13 +1,13 @@
 package cn.edu.scujcc.model;
 
-public class Result {
+public class Result<T> {
 	public static final int OK = 1;
 	public static final int DUPLICATED = -1;
 	public static final int ERROR = 0;
 	
 	private int status;
 	private String message;
-	private User data;
+	private T data;
 	
 	public int getStatus() {
 		return status;
@@ -21,11 +21,24 @@ public class Result {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-	public User getData() {
+	public T getData() {
 		return data;
 	}
-	public void setData(User data) {
+	public void setData(T data) {
 		this.data = data;
 	}
 	
+	public Result<T> ok() {
+		Result<T> result = new Result<>();
+		result.setStatus(OK);
+		result.setMessage("操作成功");
+		return result;
+	}
+	
+	public Result<T> error() {
+		Result<T> result = new Result<>();
+		result.setStatus(ERROR);
+		result.setMessage("操作失败");
+		return result;
+	}
 }

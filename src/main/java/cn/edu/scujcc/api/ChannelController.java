@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cn.edu.scujcc.model.Channel;
 import cn.edu.scujcc.model.Comment;
+import cn.edu.scujcc.model.Result;
 import cn.edu.scujcc.model.User;
 import cn.edu.scujcc.service.ChannelService;
 
@@ -35,48 +36,63 @@ public class ChannelController {
 	private ChannelService service;
 	
 	@GetMapping
-	public List<Channel> getAllChannels() {
+	public Result<List<Channel>> getAllChannels() {
 		logger.info("正在读取所有频道信息!!!");
-		List<Channel> results = service.getAllChannels();
-				
-		return results;
+		Result<List<Channel>> result = new Result<List<Channel>>();
+		List<Channel> channels = service.getAllChannels();
+		result = result.ok();
+		result.setData(channels);
+		return result;
 	}
 	
 	@GetMapping("/{id}")
-	public Channel getChannel(@PathVariable String id) {
+	public Result<Channel> getChannel(@PathVariable String id) {
 		logger.info("正在读取频道："+id);
+		Result<Channel> result = new Result<>();
 		Channel c = service.getChannel(id);
 		if (c != null) {
-			return c;
+			result = result.ok();
+			result.setData(c);
 		} else {
 			logger.error("找不到指定的频道。");
-			return null;
+			result = result.error();
+			result.setMessage("找不到指定的频道。");
 		}
+		return result;
 	}
 	
 	@DeleteMapping("/{id}")
-	public ResponseEntity<String> deleteChannel(@PathVariable String id) {
-		System.out.println("即将删除频道，id="+id);
-		boolean result = service.deleteChannel(id);
-		if (result) {
-			return ResponseEntity.ok().body("删除成功.");
+	public Result<Channel> deleteChannel(@PathVariable String id) {
+		logger.info("即将删除频道，id="+id);
+		Result<Channel> result = new Result<>();
+		boolean del = service.deleteChannel(id);
+		if (del) {
+			result = result.ok();
 		} else {
-			return ResponseEntity.ok().body("删除失败.");
+			result.setStatus(Result.ERROR);
+			result.setMessage("删除失败");
 		}
+		return result;
 	}
 	
 	@PostMapping
-	public Channel createChannel(@RequestBody Channel c) {
-		System.out.println("即将新建频道，频道数据：" + c);
+	public Result<Channel> createChannel(@RequestBody Channel c) {
+		logger.info("即将新建频道，频道数据：" + c);
+		Result<Channel> result = new Result<>();
 		Channel saved= service.createChannel(c);
-		return saved;
+		result = result.ok();
+		result.setData(saved);
+		return result;
 	}
 	
 	@PutMapping
-	public Channel updateChannel(@RequestBody Channel c) {
+	public Result<Channel> updateChannel(@RequestBody Channel c) {
 		logger.debug("即将更新频道：频道数据：" + c);
+		Result<Channel> result = new Result<>();
 		Channel updated = service.updateChannel(c);
-		return updated;
+		result = result.ok();
+		result.setData(updated);
+		return result;
 	}
 	
 	@GetMapping("/q/{quality}")
@@ -114,10 +130,11 @@ public class ChannelController {
 	}
 	
 	@GetMapping("/{channelId}/hotcomments")
-	public List<Comment> hotComments(@PathVariable String channelId) {
-		List<Comment> result = null;
+	public Result<List<Comment>> hotComments(@PathVariable String channelId) {
+		Result<List<Comment>> result = new Result<List<Comment>>();
 		logger.debug("获取频道"+channelId+"的热门评论...");
-		result = service.hotComments(channelId);
+		result = result.ok();
+		result.setData(service.hotComments(channelId));
 		return result;
 	}
 }
