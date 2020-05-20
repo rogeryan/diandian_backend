@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,17 +24,18 @@ import cn.edu.scujcc.model.Comment;
 import cn.edu.scujcc.model.Result;
 import cn.edu.scujcc.model.User;
 import cn.edu.scujcc.service.ChannelService;
+import cn.edu.scujcc.service.UserService;
 
 @RestController
 @RequestMapping("/channel")
 public class ChannelController {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelController.class);
-	
-	@Autowired
-	private CacheManager cacheManager;
-	
+
 	@Autowired
 	private ChannelService service;
+	
+	@Autowired
+	private UserService userService;
 	
 	@GetMapping
 	public Result<List<Channel>> getAllChannels() {
@@ -111,21 +113,15 @@ public class ChannelController {
 	}
 	
 	@PostMapping("/{channelId}/comment")
-	public Channel addComment(@PathVariable String channelId, @RequestBody Comment comment) {
+	public Channel addComment(@RequestHeader("token") String token, @PathVariable String channelId, @RequestBody Comment comment) {
 		Channel result = null;
 		logger.debug("即将评论频道："+channelId+"，评论对象："+comment);
-		//首先检查用户是否登录过
-		Cache cache = cacheManager.getCache(User.CACHE_NAME);
-		ValueWrapper obj = cache.get("current_user");
-		if (obj == null) {
-			logger.warn("用户未登录就想评论，拒绝！");
-		} else {
-			//把评论保存到数据库
-			String username = (String) obj.get();
-			logger.debug("登录用户"+username+"正在评论...");
-			comment.setAuthor(username);
-			result = service.addComment(channelId, comment);
-		}
+		//把评论保存到数据库
+		String username = userService.currentUser(token);
+		logger.debug("登录用户"+username+"正在评论...");
+		comment.setAuthor(username);
+		result = service.addComment(channelId, comment);
+		
 		return result;
 	}
 	
